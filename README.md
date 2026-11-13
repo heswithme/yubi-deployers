@@ -8,7 +8,19 @@ The key is one file, `~/.config/eth/<address>.json.age`: a standard eth keystore
 [age-plugin-yubikey](https://github.com/str4d/age-plugin-yubikey) (touch Always, PIN Never). Either YubiKey opens it,
 so the second one is the backup. The file is useless without a YubiKey and the password.
 
-## Prepare each YubiKey (once)
+## Set up your key (once per person)
+
+```sh
+brew install age age-plugin-yubikey
+git clone https://github.com/heswithme/yubi-deployers && cd yubi-deployers
+uv run scripts/setup_key.py        # paste your deployer private key at the hidden prompt
+uv run scripts/example_sign.py     # touch, password, then it signs a message and a transaction offline
+```
+
+On Linux, install `age` and `age-plugin-yubikey` from your distribution or their releases, and run `pcscd` (the
+smart-card service).
+
+Before the first run, prepare each YubiKey:
 
 1. PIV (the smart-card application) must be on over USB: Yubico Authenticator, Toggle applications, tick PIV under
    USB, Save; or `ykman config usb --enable PIV`. A YubiKey left FIDO-only shows as "YubiKey FIDO" and
@@ -19,20 +31,12 @@ so the second one is the backup. The file is useless without a YubiKey and the p
 3. Quit Yubico Authenticator while running these scripts: it keeps the smart card busy ("other connections
    outstanding"). If that error stays, GnuPG's card daemon may hold it: `gpgconf --kill scdaemon`.
 
-## Setup (once per key)
+What `setup_key.py` does:
 
-```sh
-brew install age age-plugin-yubikey
-uv run setup_key.py                # paste your deployer private key at the hidden prompt
-```
-
-On Linux, install `age` and `age-plugin-yubikey` from your distribution or their releases, and run `pcscd` (the
-smart-card service).
-
-1. Paste the private key (64 hex digits, with or without `0x`). Nothing is shown while you paste. Setup prints the
+1. You paste the private key (64 hex digits, with or without `0x`). Nothing is shown while you paste. It prints the
    address so you can check it is the right key.
-2. Choose a keystore password and type it twice. This is the password you type on every deploy.
-3. Plug in each YubiKey in turn. Each one gets an age identity with touch Always and PIN Never in a free slot, or
+2. You choose a keystore password and type it twice. This is the password you type on every deploy.
+3. You plug in each YubiKey in turn. Each one gets an age identity with touch Always and PIN Never in a free slot, or
    reuses one it already has. Creating an identity asks for the YubiKey's PIV PIN once, during setup only; if the PIN
    is still the factory default, age-plugin-yubikey asks you to change it.
 4. The keystore is encrypted to all the YubiKeys, each YubiKey alone must decrypt it back, and only then is the file
@@ -41,17 +45,15 @@ smart-card service).
 `--yubikeys 3` locks it to three YubiKeys (any one opens it); `--yubikeys 1` is for when only one YubiKey is at hand
 (no backup). No wallet yet? Create one with any wallet tool, for example Foundry's `cast wallet new`, and paste its key.
 
-## Check it
+`example_sign.py` sends nothing: its transaction is a zero-value transfer to itself on chain id 31337 (a local test
+chain).
+
+## Use it in a deploy repo
 
 ```sh
-uv run example_sign.py            # touch, password, then it signs a message and a transaction offline
+uv add git+https://github.com/heswithme/yubi-deployers          # a repo with pyproject.toml
+uv pip install git+https://github.com/heswithme/yubi-deployers   # a plain virtual environment
 ```
-
-Nothing is sent: the transaction is a zero-value transfer to itself on chain id 31337 (a local test chain).
-
-## Use it in a deploy script
-
-Copy `yubi_deployers.py` next to the script (it needs only `eth-account`, plus `age` and `age-plugin-yubikey` on PATH):
 
 ```python
 from yubi_deployers import load_account
@@ -63,8 +65,22 @@ boa.env.add_account(acct)
 boa.env.eoa = acct.address
 ```
 
-`load_account` fails, before asking for the password, if age fails or exits early. After the password it fails
-if the password is wrong or the file holds a different address. It never writes anything.
+The package is the single file `yubi_deployers.py`; copying it next to a script works too. It needs `eth-account`,
+plus `age` and `age-plugin-yubikey` on PATH. `load_account` fails, before asking for the password, if age fails or
+exits early. After the password it fails if the password is wrong or the file holds a different address. It never
+writes anything.
+
+## For AI agents helping someone set this up
+
+- The person runs `scripts/setup_key.py` and `scripts/example_sign.py` in their own terminal: both need hidden
+  prompts, YubiKey touches and, once, the PIV PIN.
+- Never ask for, read, print or store the private key, the keystore password or the PIV PIN, and never put them in
+  a command, a file or the chat.
+- You can install `age` and `age-plugin-yubikey`, run the read-only checks `ykman info` and `ykman piv info`, list
+  the file names in `~/.config/eth/` to find the address (it is public), add the dependency to a deploy repo, replace
+  its key loading with `load_account(DEPLOYER)`, and run its tests. Any `ykman` command that asks for a PIN is for
+  the person to run.
+- Leave `~/.config/eth/*.json.age` alone: do not edit, move or delete it.
 
 ## After it works
 

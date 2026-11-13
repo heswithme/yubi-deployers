@@ -1,7 +1,7 @@
 """One-time setup: put an Ethereum private key behind your YubiKeys (touch, then a keystore password).
 
-    uv run setup_key.py                  # paste the private key at the hidden prompt
-    uv run setup_key.py --yubikeys 1     # only one YubiKey at hand: no backup YubiKey
+    uv run scripts/setup_key.py                  # paste the private key at the hidden prompt
+    uv run scripts/setup_key.py --yubikeys 1     # only one YubiKey at hand: no backup YubiKey
 
 Order: the pasted key is checked and its address shown; you choose a keystore password (typed twice) and the key is
 encrypted into a standard eth keystore (scrypt), which must decrypt back to the same key; then each YubiKey gets, or
@@ -196,7 +196,7 @@ def run(args) -> None:
 
     print(f"\ndone: {target}, opened by YubiKey {' or '.join(str(x['serial']) for x in idents)}"
           " with a touch, then the keystore password")
-    print("check it: uv run example_sign.py")
+    print("check it: uv run scripts/example_sign.py")
     print("then clear the private key from your clipboard (and clipboard history, if you keep one)")
 
 

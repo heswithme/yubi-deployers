@@ -1,6 +1,6 @@
 """Load the deployer with a YubiKey touch and the keystore password, then sign offline. Nothing is sent.
 
-    uv run example_sign.py [ADDRESS]     # ADDRESS defaults to the only key file in ~/.config/eth
+    uv run scripts/example_sign.py [ADDRESS]     # ADDRESS defaults to the only key file in ~/.config/eth
 
 A deploy script does the same load, then hands the account to titanoboa:
     acct = load_account(DEPLOYER)
@@ -20,7 +20,8 @@ from yubi_deployers import LoadError, load_account
 def only_address() -> str:
     files = sorted(yubi_deployers.KEY_DIR.glob("0x*.json.age"))
     if len(files) != 1:
-        sys.exit(f"{len(files)} key files in {yubi_deployers.KEY_DIR}; pass the address: uv run example_sign.py 0x...")
+        sys.exit(f"{len(files)} key files in {yubi_deployers.KEY_DIR};"
+                 " pass the address: uv run scripts/example_sign.py 0x...")
     return files[0].name.removesuffix(".json.age")
 
 

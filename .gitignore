@@ -4,3 +4,4 @@ __pycache__/
 .aichord/
 *.age
 .DS_Store
+dist/

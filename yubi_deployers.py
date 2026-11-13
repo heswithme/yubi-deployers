@@ -3,7 +3,7 @@
 The key lives in ~/.config/eth/<checksum address>.json.age: a standard eth keystore (scrypt, password)
 encrypted with age to one or more YubiKeys through age-plugin-yubikey (touch Always, PIN Never).
 Nothing is written to disk; the decrypted keystore and the key stay in this process's memory.
-setup_key.py creates the file.
+scripts/setup_key.py in github.com/heswithme/yubi-deployers creates the file.
 
     from yubi_deployers import load_account
     acct = load_account("0x...")   # touch the YubiKey, then type the keystore password
@@ -77,7 +77,8 @@ def load_account(expected_address: str) -> LocalAccount:
     expected = to_checksum_address(expected_address)  # rejects a malformed address before any prompt
     path = key_path(expected)
     if not path.is_file():
-        raise LoadError(f"no key file {path}; run setup_key.py")
+        raise LoadError(f"no key file {path}; create it with scripts/setup_key.py"
+                        " from github.com/heswithme/yubi-deployers")
     stubs = yubikey_stubs()
     if not stubs:
         raise LoadError("no YubiKey with an age identity is plugged in")
